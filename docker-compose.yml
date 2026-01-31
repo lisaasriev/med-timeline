@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: med_timeline_postgres
+    environment:
+      POSTGRES_DB: med_timeline
+      POSTGRES_USER: meduser
+      POSTGRES_PASSWORD: medpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:

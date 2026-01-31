@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+venv/
+
+# Django
+*.sqlite3
+/staticfiles/
+media/
+
+# Node / React
+node_modules/
+build/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+
+# Docker
+pgdata/
