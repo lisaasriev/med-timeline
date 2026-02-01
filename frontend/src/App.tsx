@@ -24,15 +24,17 @@ function App() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const API_URL = process.env.REACT_APP_API_URL;
+
   useEffect(() => {
-    fetch("http://localhost:8000/api/patients/")
+    fetch(`${API_URL}/api/patients/`)
       .then(res => res.json())
       .then(data => setPatients(data))
       .catch(err => console.error(err));
   }, []);
 
   const loadPrescriptions = () => {
-    let url = "http://localhost:8000/api/prescriptions/?";
+    let url = `${API_URL}/api/prescriptions/?`;
 
     if (selectedPatient) url += `patient_id=${selectedPatient}&`;
     if (status) url += `status=${status}&`;
