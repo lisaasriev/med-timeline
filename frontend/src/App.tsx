@@ -1,24 +1,36 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import "./App.css";
 
 function App() {
+  const [prescriptions, setPrescriptions] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/prescriptions/?patient_id=4")
+      .then(res => res.json())
+      .then(data => {
+        setPrescriptions(data);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>Medication Timeline</h1>
+
+      <ul>
+        {prescriptions.map((p: any) => (
+          <li key={p.id} style={{ marginBottom: "10px" }}>
+            <strong>{p.medication.name}</strong> ({p.dose})
+            <br />
+            Facility: {p.facility.name}
+            <br />
+            {p.start_date} → {p.end_date ?? "Ongoing"}
+            <br />
+            Status: {p.status}
+          </li>
+        ))}
+      </ul>
+
     </div>
   );
 }

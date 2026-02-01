@@ -48,7 +48,7 @@ class PrescriptionViewSet(ReadOnlyModelViewSet):
                 Q(end_date__gte=start_date) | Q(end_date__isnull=True)
             )
 
-        qs = qs.order_by("start_date")
+        qs = qs.order_by("-start_date")
 
         return qs
     
