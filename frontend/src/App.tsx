@@ -71,36 +71,39 @@ function App() {
 
   function processEdgeCases(prescriptions: any[]) {
     const medsMap: Record<string, any[]> = {};
-
     prescriptions.forEach(p => {
       const key = p.medication.name;
       if (!medsMap[key]) medsMap[key] = [];
-      if (p.status === "active") medsMap[key].push(p);
+      medsMap[key].push(p);
     });
 
     return prescriptions.map(p => {
-      if (p.status !== "active") return { ...p, edgeCases: [] };
+      let edgeCases: string[] = [];
+      if (p.status === "active") {
+        const group = medsMap[p.medication.name];
+        const activeGroup = group.filter(x => x.status === "active");
 
-      const edgeCases: string[] = [];
-      const group = medsMap[p.medication.name];
+        if (activeGroup.length > 1) {
+          const facilities = new Set(activeGroup.map(x => x.facility.id));
+          if (facilities.size > 1) edgeCases.push("Different facilities");
 
-      if (group.length > 1) {
-        const facilities = new Set(group.map(x => x.facility.id));
-        if (facilities.size > 1) edgeCases.push("Different facilities");
+          const doses = new Set(activeGroup.map(x => x.dose));
+          if (doses.size > 1) edgeCases.push("Dose changed");
 
-        const doses = new Set(group.map(x => x.dose));
-        if (doses.size > 1) edgeCases.push("Dose changed");
-
-        const sortedByPriority = [...group].sort(
-          (a, b) => getPrescriptionPriority(b) - getPrescriptionPriority(a)
-        );
-        const topPriority = getPrescriptionPriority(sortedByPriority[0]);
-        if (getPrescriptionPriority(p) !== topPriority) {
-          edgeCases.push("Lower priority/conflicting");
+          const sortedByPriority = [...activeGroup].sort(
+            (a, b) => getPrescriptionPriority(b) - getPrescriptionPriority(a)
+          );
+          const topPriority = getPrescriptionPriority(sortedByPriority[0]);
+          if (getPrescriptionPriority(p) !== topPriority) edgeCases.push("Lower priority/conflicting");
         }
       }
 
-      return { ...p, edgeCases };
+      const priorityValue = getPrescriptionPriority(p);
+      let priorityLevel = "low";
+      if (priorityValue >= 25) priorityLevel = "high";
+      else if (priorityValue >= 15) priorityLevel = "medium";
+
+      return { ...p, edgeCases, priorityLevel };
     });
   }
 
@@ -149,26 +152,62 @@ function App() {
 
       <ul className="timeline">
         {prescriptions.map((p: any) => (
-          <li
-            key={p.id}
-            className={`timeline-event ${p.edgeCases.includes("Lower priority/conflicting") ? "low-priority" : ""}`}
-            style={{ opacity: p.status !== "active" ? 0.5 : 1 }}
-          >
-            <div className="card-header">
-              <strong>{p.medication.name}</strong> ({p.dose})
-              <span className={`status ${p.status}`}>{p.status}</span>
+        <li
+          key={p.id}
+          className="timeline-event"
+          style={{
+            opacity: p.status !== "active" ? 0.5 : 1,
+            borderLeftColor:
+              p.priorityLevel === "high"
+                ? "red"
+                : p.priorityLevel === "medium"
+                ? "orange"
+                : "#1976d2" 
+          }}
+        >
+          <div className="card-header">
+            <div className="header-left">
+              <div className="medication-title">
+                <strong>{p.medication.name}</strong>
+              </div>
+              <div className="medication-dose">
+                {p.dose}
+              </div>
             </div>
+            <span className={`status ${p.status}`}>{p.status}</span>
+          </div>
             <div className="card-body">
-              Patient: {p.patient.name} <br />
-              Facility: {p.facility.name} <br />
-              {p.start_date} → {p.end_date ?? "Ongoing"} <br />
-              <small style={{ fontStyle: "italic", color: "#555" }}>
+              <div>
+                <strong>Patient:</strong> {p.patient.name}
+              </div>
+              <div>
+                <strong>Facility:</strong> {p.facility.name}
+              </div>
+              <div>
+                {p.start_date} → {p.end_date ?? "Ongoing"}
+              </div>
+
+              <small>
                 Source: {p.source.label}
               </small>
+
               <div className="edge-cases">
-                {p.edgeCases.map((ec: string, i: number) => (
-                  <span key={i} className="edge-case-badge">{ec}</span>
-                ))}
+                {p.edgeCases.map((ec: string, i: number) => {
+                  const ecClass =
+                    ec === "Different facilities"
+                      ? "ec-facility"
+                      : ec === "Dose changed"
+                      ? "ec-dose"
+                      : ec === "Lower priority/conflicting"
+                      ? "ec-priority"
+                      : "";
+
+                  return (
+                    <span key={i} className={`edge-case-badge ${ecClass}`}>
+                      {ec}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </li>

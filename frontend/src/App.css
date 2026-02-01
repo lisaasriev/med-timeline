@@ -1,9 +1,15 @@
+body {
+  margin: 0;
+  background-color: #fff1f5;
+}
+
 .App {
   text-align: center;
   font-family: Arial, sans-serif;
   padding: 20px;
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 h1 {
@@ -16,7 +22,33 @@ h1 {
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
+  justify-content: center;
   align-items: center;
+  background: #ffe6ee;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.filters button {
+  padding: 6px 14px;
+  cursor: pointer;
+
+  background-color: #f48fb1;   
+  color: white;
+  border: none;
+  border-radius: 6px;
+
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.filters button:hover {
+  background-color: #ec6f9a;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.filters button:active {
+  transform: translateY(1px);
 }
 
 .filters label {
@@ -25,13 +57,11 @@ h1 {
 
 .filters select,
 .filters input {
-  padding: 5px;
+  padding: 6px;
   font-size: 14px;
-}
-
-.filters button {
-  padding: 5px 12px;
-  cursor: pointer;
+  border: 1px solid #f3c6d3;
+  border-radius: 6px;
+  background: #fff6f9;
 }
 
 .timeline {
@@ -45,20 +75,53 @@ h1 {
   border: 1px solid #ccc;
   border-left: 4px solid #1976d2;
   border-radius: 6px;
-  background-color: #fafafa;
+  background-color: #ffe6ee;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .timeline-event:hover {
-  background-color: #f0f4ff;
+  background-color: #ffd6e4;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   font-weight: bold;
+  font-size: 24px;
+  align-items: center; 
   margin-bottom: 6px;
+}
+
+.card-body {
+  text-align: center;
+  font-size: 20px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.card-body small {
+  display: block;
+  margin-top: 4px;
+  color: #666;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.medication-title {
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.medication-dose {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.2;
 }
 
 .status.active { color: green; }
@@ -73,13 +136,21 @@ h1 {
 }
 
 .edge-case-badge {
-  background-color: #ffcc00;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
+  color: white;
 }
 
-.timeline-event.low-priority {
-  border-left-color: red;
+.ec-facility {
+  background-color: #d9534f; 
+}
+
+.ec-dose {
+  background-color: #f0ad4e; 
+}
+
+.ec-priority {
+  background-color: #5bc0de; 
 }
