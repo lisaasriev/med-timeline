@@ -154,3 +154,55 @@ h1 {
 .ec-priority {
   background-color: #5bc0de; 
 }
+
+.medication-group {
+  margin-bottom: 28px;
+}
+
+.medication-group-title {
+  font-weight: bold;
+  font-size: 18px;
+  margin: 12px 0 8px;
+  padding: 6px 10px;
+  background: #ffd6e4;
+  border-radius: 6px;
+}
+
+.filters .tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center; 
+  margin-left: 4px; 
+}
+
+.filters .tooltip .info-icon {
+  color: #f48fb1; 
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 10;
+  top: 125%; 
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+
