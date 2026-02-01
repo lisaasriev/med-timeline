@@ -170,13 +170,13 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Medication Timeline</h1>
+      <h1>💊 Medication Timeline</h1>
 
       <div className="filters">
         <span className="tooltip">
           <InfoIcon className="info-icon" />
           <span className="tooltiptext">
-            <strong>Prescription Priority Legend:</strong><br/>
+            <strong>Prescription Source Priorities:</strong><br/>
             <span style={{color:"red"}}>■ High</span> — High priority<br/>
             <span style={{color:"orange"}}>■ Medium</span> — Moderate priority<br/>
             <span style={{color:"#1976d2"}}>■ Low</span> — Normal priority
