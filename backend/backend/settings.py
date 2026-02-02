@@ -12,9 +12,13 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-key-for-local")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # Hosts and CORS
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 CORS_ALLOWED_ORIGINS = [url for url in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if url]
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+CSRF_TRUSTED_ORIGINS = [
+    url for url in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if url
+]
 
 # Installed apps
 INSTALLED_APPS = [
@@ -62,6 +66,8 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 DATABASES = {
     "default": dj_database_url.config(
+        conn_max_age=600,
+        ssl_require=not DEBUG,
         default=os.getenv("DATABASE_URL")
     )
 }
@@ -81,5 +87,11 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Required for collectstatic in production
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
