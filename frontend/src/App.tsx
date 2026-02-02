@@ -39,13 +39,12 @@ function App() {
     fetchPatients();
   }, [API_URL]);
 
-  const SOURCE_PRIORITY: Record<string, number> = {
-    ehr: 3,
-    manual: 2,
-    other: 1,
-  };
-
   const getPrescriptionPriority = useCallback((p: Prescription) => {
+    const SOURCE_PRIORITY: Record<string, number> = {
+      ehr: 3,
+      manual: 2,
+      other: 1,
+    };
     const typePriority = SOURCE_PRIORITY[p.source.type.toLowerCase()] || 0;
     const confidence = p.source.confidence || 0;
     return typePriority * 10 + confidence;
