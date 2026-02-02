@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import InfoIcon from "@mui/icons-material/Info";
 import "./App.css";
 
@@ -39,61 +39,60 @@ function App() {
     fetchPatients();
   }, [API_URL]);
 
-  const getPrescriptionPriority = useCallback((p: Prescription) => {
-    const SOURCE_PRIORITY: Record<string, number> = {
-      ehr: 3,
-      manual: 2,
-      other: 1,
-    };
-    const typePriority = SOURCE_PRIORITY[p.source.type.toLowerCase()] || 0;
-    const confidence = p.source.confidence || 0;
-    return typePriority * 10 + confidence;
-  }, []);
+  useEffect(() => {
+    const loadPrescriptions = async () => {
+      const SOURCE_PRIORITY: Record<string, number> = {
+        ehr: 3,
+        manual: 2,
+        other: 1
+      };
 
-  const processEdgeCases = useCallback((prescriptions: Prescription[]) => {
-    const groupMap: Record<string, Prescription[]> = {};
+      const getPrescriptionPriority = (p: Prescription) => {
+        const typePriority = SOURCE_PRIORITY[p.source.type.toLowerCase()] || 0;
+        const confidence = p.source.confidence || 0;
+        return typePriority * 10 + confidence;
+      };
 
-    prescriptions.forEach(p => {
-      const key = `${p.patient.id}-${p.medication.name}`;
-      if (!groupMap[key]) groupMap[key] = [];
-      groupMap[key].push(p);
-    });
+      const processEdgeCases = (data: Prescription[]) => {
+        const groupMap: Record<string, Prescription[]> = {};
+        data.forEach(p => {
+          const key = `${p.patient.id}-${p.medication.name}`;
+          if (!groupMap[key]) groupMap[key] = [];
+          groupMap[key].push(p);
+        });
 
-    return prescriptions.map(p => {
-      let edgeCases: string[] = [];
-      const key = `${p.patient.id}-${p.medication.name}`;
-      const group = groupMap[key];
+        return data.map(p => {
+          let edgeCases: string[] = [];
+          const key = `${p.patient.id}-${p.medication.name}`;
+          const group = groupMap[key];
 
-      if (p.status === "active") {
-        const activeGroup = group.filter(x => x.status === "active");
+          if (p.status === "active") {
+            const activeGroup = group.filter(x => x.status === "active");
+            if (activeGroup.length > 1) {
+              const facilities = new Set(activeGroup.map(x => x.facility.id));
+              if (facilities.size > 1) edgeCases.push("Different facilities");
 
-        if (activeGroup.length > 1) {
-          const facilities = new Set(activeGroup.map(x => x.facility.id));
-          if (facilities.size > 1) edgeCases.push("Different facilities");
+              const doses = new Set(activeGroup.map(x => x.dose));
+              if (doses.size > 1) edgeCases.push("Dose changed");
 
-          const doses = new Set(activeGroup.map(x => x.dose));
-          if (doses.size > 1) edgeCases.push("Dose changed");
+              const sortedByPriority = [...activeGroup].sort(
+                (a, b) => getPrescriptionPriority(b) - getPrescriptionPriority(a)
+              );
+              const topPriority = getPrescriptionPriority(sortedByPriority[0]);
+              if (getPrescriptionPriority(p) !== topPriority)
+                edgeCases.push("Lower priority/conflicting");
+            }
+          }
 
-          const sortedByPriority = [...activeGroup].sort(
-            (a, b) => getPrescriptionPriority(b) - getPrescriptionPriority(a)
-          );
-          const topPriority = getPrescriptionPriority(sortedByPriority[0]);
-          if (getPrescriptionPriority(p) !== topPriority)
-            edgeCases.push("Lower priority/conflicting");
-        }
-      }
+          const priorityValue = getPrescriptionPriority(p);
+          let priorityLevel = "low";
+          if (priorityValue >= 25) priorityLevel = "high";
+          else if (priorityValue >= 15) priorityLevel = "medium";
 
-      const priorityValue = getPrescriptionPriority(p);
-      let priorityLevel = "low";
-      if (priorityValue >= 25) priorityLevel = "high";
-      else if (priorityValue >= 15) priorityLevel = "medium";
+          return { ...p, edgeCases, priorityLevel };
+        });
+      };
 
-      return { ...p, edgeCases, priorityLevel };
-    });
-  }, [getPrescriptionPriority]);
-
-  const loadPrescriptions = useCallback(() => {
-    const fetchPrescriptions = async () => {
       try {
         let url = `${API_URL}/api/prescriptions/?`;
         if (selectedPatient) url += `patient_id=${selectedPatient}&`;
@@ -120,27 +119,23 @@ function App() {
           return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
         });
 
-        const processed = processEdgeCases(sortedData);
-        setPrescriptions(processed);
+        setPrescriptions(processEdgeCases(sortedData));
       } catch (err) {
         console.error(err);
       }
     };
-    fetchPrescriptions();
-  }, [API_URL, selectedPatient, status, startDate, endDate, processEdgeCases]);
 
-  useEffect(() => {
     loadPrescriptions();
-  }, [loadPrescriptions]);
+  }, [API_URL, selectedPatient, status, startDate, endDate]);
 
-  const groups = React.useMemo(() => {
-    const g: Record<string, Prescription[]> = {};
+  const groupedPrescriptions = React.useMemo(() => {
+    const groups: Record<string, Prescription[]> = {};
     prescriptions.forEach(p => {
       const key = p.medication.name;
-      if (!g[key]) g[key] = [];
-      g[key].push(p);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
     });
-    return g;
+    return groups;
   }, [prescriptions]);
 
   return (
@@ -179,11 +174,13 @@ function App() {
         <label>End:</label>
         <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
 
-        <button onClick={loadPrescriptions}>Apply Filters</button>
+        <button onClick={() => setPrescriptions([...prescriptions])}>
+          Apply Filters
+        </button>
       </div>
 
       <ul className="timeline">
-        {Object.entries(groups).map(([medName, group]) => (
+        {Object.entries(groupedPrescriptions).map(([medName, group]) => (
           <li key={medName} className="medication-group">
             <div className="medication-group-title">{medName}</div>
 
@@ -210,7 +207,8 @@ function App() {
 
                   <div className="edge-cases">
                     {p.edgeCases.map((ec, i) => {
-                      const ecClass = ec === "Different facilities" ? "ec-facility"
+                      const ecClass =
+                        ec === "Different facilities" ? "ec-facility"
                         : ec === "Dose changed" ? "ec-dose"
                         : ec === "Lower priority/conflicting" ? "ec-priority" : "";
                       return <span key={i} className={`edge-case-badge ${ecClass}`}>{ec}</span>;
